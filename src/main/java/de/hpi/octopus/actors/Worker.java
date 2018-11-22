@@ -36,7 +36,7 @@ public class Worker extends AbstractActor {
 	// Actor Messages //
 	////////////////////
 	
-	@Data @AllArgsConstructor @SuppressWarnings("unused")
+	@Data @SuppressWarnings("unused")
 	public static class WorkMessage implements Serializable {
 		private static final long serialVersionUID = -7643194361868862395L;
 		private WorkMessage() {}
@@ -47,9 +47,6 @@ public class Worker extends AbstractActor {
 		private static final long serialVersionUID = -3129246284264562748L;
 
 		private ArrayList<List<String>> victims;
-		public PasswordWorkMessage(ArrayList<List<String>> victims) {
-			this.victims = victims;
-		}
 
 	}
 
@@ -60,11 +57,7 @@ public class Worker extends AbstractActor {
 		private List<String> passwords;
 		private BigInteger signsBegin;
 		private long range;
-		public LinearCombinationWorkMessage(List<String> passwords, BigInteger signsBegin, long range) {
-			this.passwords = passwords;
-			this.signsBegin = signsBegin;
-			this.range = range;
-		}
+
 	}
 
 	@Data @AllArgsConstructor
@@ -74,11 +67,7 @@ public class Worker extends AbstractActor {
 		private long originalId;
 		private String originalGene;
 		private ArrayList<List<String>> potentialPartners;
-		public GeneWorkMessage(long originalId, String originalGene, ArrayList<List<String>> potentialPartners) {
-			this.originalId = originalId;
-			this.originalGene = originalGene;
-			this.potentialPartners = potentialPartners;
-		}
+
 	}
 
 	@Data @AllArgsConstructor
@@ -86,9 +75,7 @@ public class Worker extends AbstractActor {
 		private static final long serialVersionUID = -3498714556892986224L;
 
 		private List<String> prefixAndIds;
-		public HashMiningWorkMessage(List<String> prefixAndIds) {
-			this.prefixAndIds = prefixAndIds;
-		}
+
 	}
 
 	/////////////////
@@ -149,6 +136,7 @@ public class Worker extends AbstractActor {
 	}
 	
 	private void handle(PasswordWorkMessage message) {
+		this.log.info(message.toString());
 		ArrayList<List<String>> crackedVictims = new ArrayList<>();
 		for(List<String> victim : message.victims) {
 			String crackedPassword = Passwordcracker.crack(victim.get(1));

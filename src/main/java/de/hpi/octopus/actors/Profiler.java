@@ -41,12 +41,21 @@ public class Profiler extends AbstractActor {
         private ArrayList<ArrayList<String>> students;
     }
 
-    @Data @AllArgsConstructor @SuppressWarnings("unused")
+    @Data  @SuppressWarnings("unused")
     public static class CompletionMessage implements Serializable {
         private static final long serialVersionUID = -6823011111281387872L;
         public enum status {MINIMAL, EXTENDABLE, FALSE, FAILED}
         private CompletionMessage() {}
         private status result;
+    }
+
+    @AllArgsConstructor @Data
+    public static class PasswordCompletionMessage extends CompletionMessage {
+        private static final long serialVersionUID = -3129246288264562748L;
+
+        private ArrayList<List<String>> victims;
+
+
     }
 
     /////////////////
@@ -59,7 +68,7 @@ public class Profiler extends AbstractActor {
     private final Queue<ActorRef> idleWorkers = new LinkedList<>();
     private final Map<ActorRef, WorkMessage> busyWorkers = new HashMap<>();
 
-    private ArrayList<ArrayList<String>> students = new ArrayList<ArrayList<String>>;
+    private ArrayList<ArrayList<String>> students = new ArrayList<ArrayList<String>>();
 
 
     private TaskMessage task;
@@ -74,7 +83,7 @@ public class Profiler extends AbstractActor {
                 .match(RegistrationMessage.class, this::handle)
                 .match(Terminated.class, this::handle)
                 .match(TaskMessage.class, this::handle)
-                .match(CompletionMessage.class, this::handle)
+                .match(PasswordCompletionMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
@@ -92,7 +101,7 @@ public class Profiler extends AbstractActor {
         if (!this.idleWorkers.remove(message.getActor())) {
             WorkMessage work = this.busyWorkers.remove(message.getActor());
             if (work != null) {
-                this.assign(work);
+                this.assign();
             }
         }
         this.log.info("Unregistered {}", message.getActor());
@@ -101,42 +110,67 @@ public class Profiler extends AbstractActor {
     private void handle(TaskMessage message) {
         if (this.task != null)
             this.log.error("The profiler actor can process only one task in its current implementation!");
-
+        this.log.info("task received");
 
 
         students = message.students;
 
+        for(int i = 0; i<students.size(); i+=4) {
+            List<ArrayList<String>> studentPackage = students.subList(i,Math.min(i+4,students.size()-1));
+            ArrayList<List<String>> workPackage = new ArrayList<List<String>>();
+            for (int j = 0; j<studentPackage.size();j++){
+                ArrayList<String> idPw = new ArrayList<String>();
+                idPw.add(studentPackage.get(j).get(0));
+                idPw.add(studentPackage.get(j).get(2));
 
-        this.task = message;
-        this.assign(new WorkMessage(new int[0], new int[0]));
-    }
-
-    private void handle(CompletionMessage message) {
-        ActorRef worker = this.sender();
-        WorkMessage work = this.busyWorkers.remove(worker);
-
-        this.log.info("Completed: [{},{}]", Arrays.toString(work.getX()), Arrays.toString(work.getY()));
-
-        switch (message.getResult()) {
-            case MINIMAL:
-                this.report(work);
-                break;
-            case EXTENDABLE:
-                this.split(work);
-                break;
-            case FALSE:
-                // Ignore
-                break;
-            case FAILED:
-                this.assign(work);
-                break;
+                workPackage.add(idPw);
+            }
+            unassignedWork.add(new Worker.PasswordWorkMessage(workPackage));
         }
 
-        this.assign(worker);
+        this.log.info("work generated");
+
+
+        this.task = message;
+        while(!unassignedWork.isEmpty()) {
+            this.assign();
+        }
     }
 
-    private void assign(WorkMessage work) {
+//    private void handle(CompletionMessage message) {
+//        ActorRef worker = this.sender();
+//        WorkMessage work = this.busyWorkers.remove(worker);
+//
+//        this.log.info("Completed: [{},{}]", Arrays.toString(work.getX()), Arrays.toString(work.getY()));
+//
+//        switch (message.getResult()) {
+//            case MINIMAL:
+//                this.report(work);
+//                break;
+//            case EXTENDABLE:
+//                this.split(work);
+//                break;
+//            case FALSE:
+//                // Ignore
+//                break;
+//            case FAILED:
+//                this.assign(work);
+//                break;
+//        }
+//
+//        this.assign(worker);
+//    }
+
+    private void handle(PasswordCompletionMessage message) {
+        this.log.info("keeeeeekse");
+        this.log.info(message.victims.toString());
+    }
+
+    private void assign() {
+        WorkMessage work = this.unassignedWork.poll();
         ActorRef worker = this.idleWorkers.poll();
+
+        this.log.info(work.toString());
 
         if (worker == null) {
             this.unassignedWork.add(work);
@@ -160,23 +194,10 @@ public class Profiler extends AbstractActor {
     }
 
     private void report(WorkMessage work) {
-        this.log.info("UCC: {}", Arrays.toString(work.getX()));
+
     }
 
     private void split(WorkMessage work) {
-        int[] x = work.getX();
-        int[] y = work.getY();
 
-        int next = x.length + y.length;
-
-        if (next < this.task.getAttributes() - 1) {
-            int[] xNew = Arrays.copyOf(x, x.length + 1);
-            xNew[x.length] = next;
-            this.assign(new WorkMessage(xNew, y));
-
-            int[] yNew = Arrays.copyOf(y, y.length + 1);
-            yNew[y.length] = next;
-            this.assign(new WorkMessage(x, yNew));
-        }
     }
 }
