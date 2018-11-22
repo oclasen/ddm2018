@@ -1,11 +1,7 @@
 package de.hpi.octopus.actors;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -42,7 +38,7 @@ public class Profiler extends AbstractActor {
 	public static class TaskMessage implements Serializable {
 		private static final long serialVersionUID = -8330958742629706627L;
 		private TaskMessage() {}
-		private int attributes;
+		private ArrayList<ArrayList<String>> students;
 	}
 	
 	@Data @AllArgsConstructor @SuppressWarnings("unused")
@@ -104,7 +100,7 @@ public class Profiler extends AbstractActor {
 			this.log.error("The profiler actor can process only one task in its current implementation!");
 		
 		this.task = message;
-		this.assign(new WorkMessage(new int[0], new int[0]));
+		this.assign(new WorkMessage("pwCrack", new int[0]));
 	}
 	
 	private void handle(CompletionMessage message) {
