@@ -21,9 +21,9 @@ public class OctopusMaster extends OctopusSystem {
 	
 	public static final String MASTER_ROLE = "master";
 
-	public static void start(String actorSystemName, int workers, String host, int port, String path) {
+	public static void start(String actorSystemName, int workers, int slaves, String host, int port, String path) {
 
-		final Config config = createConfiguration(actorSystemName, MASTER_ROLE, host, port, host, port);
+		final Config config = createConfiguration(actorSystemName, MASTER_ROLE, host, port, host, port, workers);
 		
 		final ActorSystem system = createSystem(actorSystemName, config);
 		

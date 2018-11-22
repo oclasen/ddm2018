@@ -12,7 +12,7 @@ import scala.concurrent.duration.Duration;
 
 public class OctopusSystem {
 
-	protected static Config createConfiguration(String actorSystemName, String actorSystemRole, String host, int port, String masterhost, int masterport) {
+	protected static Config createConfiguration(String actorSystemName, String actorSystemRole, String host, int port, String masterhost, int masterport, int slaves) {
 		
 		// Create the Config with fallback to the application config
 		return ConfigFactory.parseString(
@@ -21,7 +21,8 @@ public class OctopusSystem {
 				"akka.remote.artery.canonical.hostname = \"" + host + "\"\n" +
 				"akka.remote.artery.canonical.port = " + port + "\n" +
 				"akka.cluster.roles = [" + actorSystemRole + "]\n" +
-				"akka.cluster.seed-nodes = [\"akka://" + actorSystemName + "@" + masterhost + ":" + masterport + "\"]")
+				"akka.cluster.seed-nodes = [\"akka://" + actorSystemName + "@" + masterhost + ":" + masterport + "\"]" +
+				"akka.cluster.min-nr-of-members = " + slaves +"\n")
 			.withFallback(ConfigFactory.load("octopus"));
 	}
 	

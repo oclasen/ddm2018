@@ -31,7 +31,7 @@ public class OctopusApp {
 
             switch (jCommander.getParsedCommand()) {
                 case OctopusMaster.MASTER_ROLE:
-                    OctopusMaster.start(ACTOR_SYSTEM_NAME, masterCommand.workers, masterCommand.host, masterCommand.port);
+                    OctopusMaster.start(ACTOR_SYSTEM_NAME, masterCommand.workers, masterCommand.slaves, masterCommand.host, masterCommand.port, masterCommand.path);
                     break;
                 case OctopusSlave.SLAVE_ROLE:
                     OctopusSlave.start(ACTOR_SYSTEM_NAME, slaveCommand.workers, slaveCommand.host, slaveCommand.port, slaveCommand.masterhost, slaveCommand.masterport);
@@ -56,6 +56,8 @@ public class OctopusApp {
     	public static final int DEFAULT_MASTER_PORT = 7877;
     	public static final int DEFAULT_SLAVE_PORT = 7879;
         public static final int DEFAULT_WORKERS = 4;
+        public static final int DEFAULT_SLAVES = 4;
+        public static final String DEFAULT_PATH = "students.csv";
     	
     	@Parameter(names = {"-h", "--host"}, description = "this machine's host name or IP to bind against")
         String host = this.getDefaultHost();
@@ -75,6 +77,12 @@ public class OctopusApp {
 
     	@Parameter(names = {"-w", "--workers"}, description = "number of workers to start locally", required = false)
         int workers = DEFAULT_WORKERS;
+
+        @Parameter(names = {"-s", "--slaves"}, description = "number of slaves the master waits for", required = false)
+        int slaves = DEFAULT_SLAVES;
+
+        @Parameter(names = {"-in", "--input"}, description = "path to students.csv", required = false)
+        String path = DEFAULT_PATH;
     }
 
     @Parameters(commandDescription = "start a master actor system")
