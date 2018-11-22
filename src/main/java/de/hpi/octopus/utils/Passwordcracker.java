@@ -1,12 +1,13 @@
-package com.company;
+package de.hpi.octopus.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 public class Passwordcracker {
 
-    public  String hash(String password) {
+    public static String hash(String password) {
         MessageDigest digest = null;
         try {
             digest = MessageDigest.getInstance("SHA-256");
@@ -25,13 +26,16 @@ public class Passwordcracker {
         return stringBuffer.toString();
     }
 
-    public String crack(String hash) {
+    public static String crack(String hash) {
 
-        String pw = null;
-        for(int i = 100000; i<=1000000; i++) {
-            pw = Integer.toString(i);
-            if(hash(pw).equals(hash)) {
-                return pw;
+        String password = null;
+        for(int i = 0; i<1000000; i++) {
+            password = Integer.toString(i);
+            char[] leading = new char[6 - password.length()];
+            Arrays.fill(leading, '0');
+            password = new String(leading) + password;
+            if(hash(password).equals(hash)) {
+                return password;
             }
         }
         return null;

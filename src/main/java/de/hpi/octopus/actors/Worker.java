@@ -2,8 +2,7 @@ package de.hpi.octopus.actors;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
@@ -15,8 +14,9 @@ import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.octopus.OctopusMaster;
-import de.hpi.octopus.actors.Profiler.CompletionMessage;
+import de.hpi.octopus.actors.Profiler.PasswordCompletionMessage;
 import de.hpi.octopus.actors.Profiler.RegistrationMessage;
+import de.hpi.octopus.utils.Passwordcracker;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -44,12 +44,13 @@ public class Worker extends AbstractActor {
 
 	@Data @AllArgsConstructor
 	public static class PasswordWorkMessage extends WorkMessage {
-		private static final long serialVersionUID = -2492671797894687456L;
+		private static final long serialVersionUID = -3129246284264562748L;
 
-		private List<String> victim;
-		public PasswordWorkMessage(List<String> victim) {
-			this.victim = victim;
+		private ArrayList<List<String>> victims;
+		public PasswordWorkMessage(ArrayList<List<String>> victims) {
+			this.victims = victims;
 		}
+
 	}
 
 	@Data @AllArgsConstructor
@@ -82,7 +83,7 @@ public class Worker extends AbstractActor {
 
 	@Data @AllArgsConstructor
 	public static class HashMiningWorkMessage extends WorkMessage {
-		private static final long serialVersionUID = -1146589161762748486L;
+		private static final long serialVersionUID = -3498714556892986224L;
 
 		private List<String> prefixAndIds;
 		public HashMiningWorkMessage(List<String> prefixAndIds) {
@@ -121,6 +122,7 @@ public class Worker extends AbstractActor {
 				.match(CurrentClusterState.class, this::handle)
 				.match(MemberUp.class, this::handle)
 				.match(WorkMessage.class, this::handle)
+				.match(PasswordWorkMessage.class, this::handle)
 				.matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
 				.build();
 	}
@@ -144,31 +146,18 @@ public class Worker extends AbstractActor {
 	}
 
 	private void handle(WorkMessage message) {
-		long y = 0;
-		for (int i = 0; i < 1000000; i++)
-			if (this.isPrime(i))
-				y = y + i;
-		
-		this.log.info("done: " + y);
-		
-		this.sender().tell(new CompletionMessage(CompletionMessage.status.EXTENDABLE), this.self());
 	}
 	
-	private boolean isPrime(long n) {
-		
-		// Check for the most basic primes
-		if (n == 1 || n == 2 || n == 3)
-			return true;
+	private void handle(PasswordWorkMessage message) {
+		ArrayList<List<String>> crackedVictims = new ArrayList<>();
+		for(List<String> victim : message.victims) {
+			String crackedPassword = Passwordcracker.crack(victim.get(1));
+			List<String> crackedVictim = new ArrayList<>();
+			crackedVictim.add(victim.get(0));
+			crackedVictim.add(crackedPassword);
+			crackedVictims.add(crackedVictim);
+		}
+		this.sender().tell(new PasswordCompletionMessage(crackedVictims), this.self());
 
-		// Check if n is an even number
-		if (n % 2 == 0)
-			return false;
-
-		// Check the odds
-		for (long i = 3; i * i <= n; i += 2)
-			if (n % i == 0)
-				return false;
-		
-		return true;
 	}
 }

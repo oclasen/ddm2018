@@ -1,4 +1,4 @@
-package com.ddm;
+package de.hpi.octopus.utils;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
