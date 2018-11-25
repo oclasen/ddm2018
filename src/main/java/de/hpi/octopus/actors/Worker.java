@@ -66,7 +66,7 @@ public class Worker extends AbstractActor {
 
 		private long originalId;
 		private String originalGene;
-		private ArrayList<List<String>> potentialPartners;
+		private List<ArrayList<String>> potentialPartners;
 
 	}
 
@@ -74,7 +74,7 @@ public class Worker extends AbstractActor {
 	public static class HashMiningWorkMessage extends WorkMessage {
 		private static final long serialVersionUID = -3498714556892986224L;
 
-		private List<String> prefixAndIds;
+		private ArrayList<String> prefixAndIds;
 
 	}
 
