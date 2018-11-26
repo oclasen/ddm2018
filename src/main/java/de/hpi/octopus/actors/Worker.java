@@ -76,7 +76,7 @@ public class Worker extends AbstractActor {
 	public static class HashMiningWorkMessage extends WorkMessage {
 		private static final long serialVersionUID = -3498714556892986224L;
 
-		private ArrayList<String> prefixAndIds;
+		private ArrayList<ArrayList<Integer>> prefixAndIds;
 
 	}
 
@@ -175,11 +175,33 @@ public class Worker extends AbstractActor {
 			passwordInt.add(tmp);
 		}
 		LinearCombination linearCombination = new LinearCombination(passwordInt, message.signsBegin, message.range);
-		this.sender().tell(new PrefixCompletionMessage(linearCombination.calc()), this.self());
+		this.sender().tell(new Profiler.PrefixCompletionMessage(linearCombination.calc()), this.self());
 	}
 
 	private void handle(HashMiningWorkMessage message) {
 
+		ArrayList<ArrayList<String>> results = new ArrayList<>();
+		String begin;
+
+		for (ArrayList<Integer> entry : message.prefixAndIds) {
+			if (entry.get(1) == 1) {
+				begin = "11111";
+			} else {
+				begin = "00000";
+			}
+
+			for (int j = 0; j < Integer.MAX_VALUE; j++) {
+				String hash = Passwordcracker.hash( entry.get(2) + "" + j);
+				if (hash.startsWith(begin)) {
+					ArrayList<String> result = new ArrayList<>();
+					result.add(String.valueOf(entry.get(0)));
+					result.add(hash);
+					results.add(result);
+				}
+			}
+		}
+
+		this.sender().tell(new Profiler.HashCompletionMessage(results), this.self());
 	}
 
 }
