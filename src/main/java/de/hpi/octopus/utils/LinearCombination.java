@@ -13,19 +13,22 @@ public class LinearCombination {
             binary = String.format("%1$" + numbers.size() + "s", binary)
                         .replace(' ', '0');
 
+            System.out.println(binary);
             Integer[] prefixes = new Integer[numbers.size()];
             for (int i = 0; i < prefixes.length; i++)
                 prefixes[i] = 1;
 
             int i = 0;
-            for (int j = binary.length() - 1; j >= 0; j--) {
+            for (int j = 0; j < binary.length(); j++) {
                 if (binary.charAt(j) == '1')
                     prefixes[i] = -1;
                 i++;
             }
 
-            if (this.sum(numbers, prefixes) == 0)
+            if (this.sum(numbers, prefixes) == 0) {
+                System.out.println("this one");
                 results.add(new ArrayList<>(Arrays.asList(prefixes)));
+            }
         }
         return results;
 
