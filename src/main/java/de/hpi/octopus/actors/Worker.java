@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.*;
 
 import akka.actor.AbstractActor;
+import akka.actor.CoordinatedShutdown;
 import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent.CurrentClusterState;
@@ -47,6 +48,9 @@ public class Worker extends AbstractActor {
 	public static class PasswordWorkMessage extends WorkMessage {
 		private static final long serialVersionUID = -3129246284264562748L;
 
+		public PasswordWorkMessage() {
+
+		}
 		private ArrayList<List<String>> victims;
 
 	}
@@ -82,6 +86,13 @@ public class Worker extends AbstractActor {
 
 	}
 
+	@Data @AllArgsConstructor
+	public static class ShutdownMessage extends WorkMessage {
+		private static final long serialVersionUID = -3498714556892986224L;
+
+	}
+
+
 	/////////////////
 	// Actor State //
 	/////////////////
@@ -116,6 +127,7 @@ public class Worker extends AbstractActor {
 				.match(GeneWorkMessage.class, this:: handle)
 				.match(LinearCombinationWorkMessage.class, this::handle)
 				.match(HashMiningWorkMessage.class, this::handle)
+				.match(ShutdownMessage.class, this::handle)
 				.matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
 				.build();
 	}
@@ -218,6 +230,10 @@ public class Worker extends AbstractActor {
 		}
 
 		this.sender().tell(new Profiler.HashCompletionMessage(result), this.self());
+	}
+
+	private void handle(ShutdownMessage message) {
+		CoordinatedShutdown.get(this.getContext().system()).runAll(CoordinatedShutdown.unknownReason());
 	}
 
 }

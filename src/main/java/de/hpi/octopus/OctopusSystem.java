@@ -21,8 +21,8 @@ public class OctopusSystem {
 				"akka.remote.artery.canonical.hostname = \"" + host + "\"\n" +
 				"akka.remote.artery.canonical.port = " + port + "\n" +
 				"akka.cluster.roles = [" + actorSystemRole + "]\n" +
+				"akka.cluster.min-nr-of-members = " + slaves + "\n" +
 				"akka.cluster.seed-nodes = [\"akka://" + actorSystemName + "@" + masterhost + ":" + masterport + "\"]")
-				//"akka.cluster.min-nr-of-members = 8")
 			.withFallback(ConfigFactory.load("octopus"));
 	}
 	
@@ -43,6 +43,7 @@ public class OctopusSystem {
 		Cluster.get(system).registerOnMemberRemoved(new Runnable() {
 			@Override
 			public void run() {
+				System.out.println("REMOOOOOOVED");
 				system.terminate();
 
 				new Thread() {

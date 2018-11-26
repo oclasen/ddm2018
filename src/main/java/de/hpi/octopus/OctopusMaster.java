@@ -37,6 +37,27 @@ public class OctopusMaster extends OctopusSystem {
 				
 				for (int i = 0; i < workers; i++)
 					system.actorOf(Worker.props(), Worker.DEFAULT_NAME + i);
+
+				String line;
+				BufferedReader br;
+				ArrayList<ArrayList<String>> students = new ArrayList<ArrayList<String>>();
+				try {
+					br = new BufferedReader(new FileReader(path));
+					br.readLine(); // this will read the first line
+					line = null;
+					int i = 0;
+					while ((line = br.readLine()) != null) {
+
+//				use semicolon as separator
+						String[] values = line.split(";");
+						students.add(new ArrayList<String>(Arrays.asList(values)));
+
+					}
+				} catch (IOException e){
+					e.printStackTrace();
+				}
+
+				system.actorSelection("/user/" + Profiler.DEFAULT_NAME).tell(new Profiler.TaskMessage(students), ActorRef.noSender());
 				
 			//	int maxInstancesPerNode = workers; // TODO: Every node gets the same number of workers, so it cannot be a parameter for the slave nodes
 			//	Set<String> useRoles = new HashSet<>(Arrays.asList("master", "slave"));
@@ -48,25 +69,5 @@ public class OctopusMaster extends OctopusSystem {
 			}
 		});
 
-		String line;
-		BufferedReader br;
-        ArrayList<ArrayList<String>> students = new ArrayList<ArrayList<String>>();
-		try {
-            br = new BufferedReader(new FileReader(path));
-            br.readLine(); // this will read the first line
-            line = null;
-            int i = 0;
-            while ((line = br.readLine()) != null) {
-
-//				use semicolon as separator
-                String[] values = line.split(";");
-                students.add(new ArrayList<String>(Arrays.asList(values)));
-
-            }
-        } catch (IOException e){
-			    e.printStackTrace();
-            }
-		
-		system.actorSelection("/user/" + Profiler.DEFAULT_NAME).tell(new Profiler.TaskMessage(students), ActorRef.noSender());
 	}
 }
