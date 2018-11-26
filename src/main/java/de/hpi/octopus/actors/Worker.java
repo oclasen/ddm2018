@@ -174,8 +174,11 @@ public class Worker extends AbstractActor {
 			}
 			passwordInt.add(tmp);
 		}
-		LinearCombination linearCombination = new LinearCombination(passwordInt, message.signsBegin, message.range);
-		this.sender().tell(new Profiler.PrefixCompletionMessage(linearCombination.calc()), this.self());
+
+		this.log.info(passwordInt.toString());
+		LinearCombination linearCombination = new LinearCombination();
+		ArrayList<ArrayList<Integer>> results = linearCombination.solve(message.passwords, message.begin, message.range);
+		this.sender().tell(new Profiler.PrefixCompletionMessage(results), this.self());
 	}
 
 	private void handle(HashMiningWorkMessage message) {
