@@ -3,7 +3,9 @@ package de.hpi.octopus.actors.listeners;
 import akka.actor.AbstractActor;
 import akka.actor.Props;
 import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.CurrentClusterState;
+import akka.cluster.Member;
 import akka.cluster.metrics.ClusterMetricsChanged;
 import akka.cluster.metrics.NodeMetrics;
 import akka.cluster.metrics.StandardMetrics;
@@ -12,6 +14,7 @@ import akka.cluster.metrics.StandardMetrics.Cpu;
 import akka.cluster.metrics.ClusterMetricsExtension;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import de.hpi.octopus.actors.Reaper;
 
 public class MetricsListener extends AbstractActor {
 
@@ -40,6 +43,7 @@ public class MetricsListener extends AbstractActor {
 	@Override
 	public void preStart() {
 		this.extension.subscribe(self());
+		Reaper.watchWithDefaultReaper(this);
 	}
 
 	@Override

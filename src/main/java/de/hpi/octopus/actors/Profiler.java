@@ -25,6 +25,11 @@ public class Profiler extends AbstractActor {
         return Props.create(Profiler.class);
     }
 
+    @Override
+    public void preStart() {
+        Reaper.watchWithDefaultReaper(this);
+    }
+
     ////////////////////
     // Actor Messages //
     ////////////////////
@@ -174,7 +179,7 @@ public class Profiler extends AbstractActor {
             this.log.info("password cracking completed");
             while (!idleWorkers.isEmpty()) {
                 ActorRef w = idleWorkers.poll();
-                w.tell(new Worker.ShutdownMessage(), this.self());
+                w.tell(PoisonPill.getInstance(), this.self());
             }
             //createPrefixWork();
         } else {

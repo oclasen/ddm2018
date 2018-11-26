@@ -105,6 +105,8 @@ public class Worker extends AbstractActor {
 	@Override
 	public void preStart() {
 		this.cluster.subscribe(this.self(), MemberUp.class);
+		Reaper.watchWithDefaultReaper(this);
+		Reaper.watchWorker(this);
 	}
 
 	@Override
