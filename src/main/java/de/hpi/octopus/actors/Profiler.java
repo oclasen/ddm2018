@@ -263,13 +263,15 @@ public class Profiler extends AbstractActor {
             for (int i = 0; i < hashValues.size(); i++){
                 ArrayList<String> hash = hashValues.get(i);
                 students.get(Integer.parseInt(hash.get(0))-1).add(hash.get(1));
-                this.log.info(students.get(i).toString());
+            }
+            for (int j = 0; j < students.size(); j++){
+                this.log.info(students.get(j).toString());
             }
             long duration = System.currentTimeMillis() - startTime;
             this.log.info("finished tasks in " + duration + " Milliseconds");
             while (!idleWorkers.isEmpty()) {
                 ActorRef w = idleWorkers.poll();
-                w.tell(new Worker.ShutdownMessage(), this.self());
+                w.tell(PoisonPill.getInstance(), this.self());
             }
         }
     }
@@ -294,7 +296,7 @@ public class Profiler extends AbstractActor {
         this.log.info("start generating genework");
         for (int i = 0; i < students.size(); i++){
             for(int j = 0; j < students.size(); j+=4) {
-                List<ArrayList<String>> studentPackage = students.subList(j, Math.min(j + 3, students.size() - 1));
+                List<ArrayList<String>> studentPackage = students.subList(j, Math.min(j + 3, students.size() - 1)+1);
                 List<ArrayList<String>> potentialPartners = new ArrayList<ArrayList<String>>();
                 for (int k = 0; k < studentPackage.size(); k++){
                     ArrayList<String> partner = new ArrayList<>();
@@ -308,7 +310,6 @@ public class Profiler extends AbstractActor {
         this.log.info("geneWork created");
         for (int j = 0; j < students.size(); j++){
             students.get(j).remove(3);
-            this.log.info(students.get(j).toString());
         }
         this.assignAll();
     }
