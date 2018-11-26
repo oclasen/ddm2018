@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import akka.actor.*;
+import akka.cluster.Cluster;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.octopus.actors.Worker.WorkMessage;
@@ -52,6 +53,9 @@ public class Profiler extends AbstractActor {
     public static class PasswordCompletionMessage extends CompletionMessage {
         private static final long serialVersionUID = -3129246288264562748L;
         private ArrayList<List<String>> victims;
+
+        public PasswordCompletionMessage() {
+        }
     }
 
     @AllArgsConstructor @Data
@@ -156,6 +160,7 @@ public class Profiler extends AbstractActor {
         busyWorkers.remove(this.sender());
         idleWorkers.add(this.sender());
         this.log.info(message.victims.toString());
+        this.log.info(this.sender().toString());
         ArrayList<List<String>> victims = message.victims;
         for (int i = 0; i < victims.size(); i++){
             List<String> singleResult = victims.get(i);
@@ -167,7 +172,11 @@ public class Profiler extends AbstractActor {
         }
         if (unassignedWork.isEmpty() && busyWorkers.isEmpty()){
             this.log.info("password cracking completed");
-            createPrefixWork();
+            while (!idleWorkers.isEmpty()) {
+                ActorRef w = idleWorkers.poll();
+                w.tell(new Worker.ShutdownMessage(), this.self());
+            }
+            //createPrefixWork();
         } else {
             this.assign(this.sender());
         }
