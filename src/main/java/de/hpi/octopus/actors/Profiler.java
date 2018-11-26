@@ -88,6 +88,8 @@ public class Profiler extends AbstractActor {
 
     private ArrayList<ArrayList<String>> students = new ArrayList<ArrayList<String>>();
 
+    //private final ActorRef master = null;
+
 
     private TaskMessage task;
 
@@ -129,7 +131,9 @@ public class Profiler extends AbstractActor {
     }
 
     private void handle(TaskMessage message) {
-        this.log.info("task received");
+        this.log.info("Cluster starts working.");
+
+        //master = this.sender();
 
         students = message.students;
 
@@ -145,8 +149,6 @@ public class Profiler extends AbstractActor {
             }
             unassignedWork.add(new Worker.PasswordWorkMessage(workPackage));
         }
-
-        this.log.info("work generated");
         this.assignAll();
     }
 
@@ -176,6 +178,7 @@ public class Profiler extends AbstractActor {
         busyWorkers.remove(this.sender());
         idleWorkers.add(this.sender());
         this.log.info("prefix completionMessage received");
+        this.log.info(message.toString());
         ArrayList<ArrayList<Integer>> combinations = message.combinations;
         if (!combinations.isEmpty()) {
             for (int i = 0; i < combinations.size(); i++) {
@@ -221,7 +224,7 @@ public class Profiler extends AbstractActor {
     private void handle(HashCompletionMessage message) {
         busyWorkers.remove(this.sender());
         idleWorkers.add(this.sender());
-        this.log.info("hashComplete");
+        this.log.info("received HashCompleteMessage");
         ArrayList<ArrayList<String>> hashes = message.hashes;
         for (int i = 0; i < hashes.size(); i++) {
             int id = Integer.parseInt(hashes.get(i).get(0));
@@ -231,12 +234,12 @@ public class Profiler extends AbstractActor {
         }
 
         if (unassignedWork.isEmpty() && busyWorkers.isEmpty()){
+            this.log.info("finished tasks");
             for (int i = 0; i < students.size(); i++){
                 this.log.info(students.get(i).toString());
             }
             for (int i = 0; i < idleWorkers.size(); i++) {
                 ActorRef worker = idleWorkers.poll();
-                worker.tell(PoisonPill.getInstance(), this.self());
             }
 
         } else {
@@ -250,16 +253,21 @@ public class Profiler extends AbstractActor {
         for (int j = 0; j < students.size(); j++){
             passwords.add(students.get(j).get(2));
         }
+        this.log.info("list of passwords created");
         double steps = Math.pow(2, students.size())-1;
-        for (double i = 0; i < steps; i+=Math.floor(steps/50000000)){
-            BigInteger signsBegin = BigDecimal.valueOf(i).toBigInteger();
-            long range = (long) Math.floor(steps/50000000);
-            unassignedWork.add(new Worker.LinearCombinationWorkMessage(passwords, signsBegin, range));
+        unassignedWork.add(new Worker.LinearCombinationWorkMessage(passwords, 1700592607230L, 40));
+        for (double i = 0; i < steps; i+=Math.floor(steps/5000)){
+            long begin = (long)i;
+            long range = (long) Math.floor(steps/5000);
+            unassignedWork.add(new Worker.LinearCombinationWorkMessage(passwords, begin, range));
         }
+
+        this.log.info(Integer.toString(unassignedWork.size()));
         this.assignAll();
     }
 
     private void createGeneWork() {
+        this.log.info("start generating genework");
         for (int i = 0; i < students.size(); i++){
             for(int j = 0; j <students.size(); j+=3) {
                 List<ArrayList<String>> studentPackage = students.subList(j, Math.min(j + 2, students.size() - 1)+1);

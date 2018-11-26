@@ -53,7 +53,7 @@ public class OctopusApp {
 
     abstract static class CommandBase {
 
-    	public static final int DEFAULT_MASTER_PORT = 7877;
+    	public static final int DEFAULT_MASTER_PORT = 7876;
     	public static final int DEFAULT_SLAVE_PORT = 7879;
         public static final int DEFAULT_WORKERS = 4;
         public static final int DEFAULT_SLAVES = 4;
