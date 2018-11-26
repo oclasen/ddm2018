@@ -364,7 +364,7 @@ public class Profiler extends AbstractActor {
         }
         this.busyWorkers.put(worker, work);
         worker.tell(work, this.self());
+        this.log.info(Integer.toString(busyWorkers.size()));
+        this.log.info(Integer.toString(idleWorkers.size()));
     }
-
-
 }
