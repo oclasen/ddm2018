@@ -152,6 +152,9 @@ public class Worker extends AbstractActor {
 		int partnerId = -1;
 		int length = 0;
 		for(ArrayList<String> entry : message.potentialPartners) {
+			if (message.originalId == Integer.valueOf(entry.get(0))) {
+				continue;
+			}
 			int potlength = GeneComparison.findLongestSubstring(message.originalGene, entry.get(1));
 			if (potlength > length) {
 				length = potlength;
@@ -174,9 +177,16 @@ public class Worker extends AbstractActor {
 			}
 			passwordInt.add(tmp);
 		}
-
+		this.log.info("message received");
 		LinearCombination linearCombination = new LinearCombination();
-		ArrayList<ArrayList<Integer>> results = linearCombination.solve(passwordInt, message.begin, message.range);
+		int[] resultInt = linearCombination.solve(passwordInt, message.begin, message.range);
+		this.log.info("this is the result" + Arrays.toString(resultInt));
+		ArrayList<Integer> resultInteger = new ArrayList<>();
+		for (int i : resultInt) {
+			resultInteger.add(i);
+		}
+		ArrayList<ArrayList<Integer>> results = new ArrayList<>();
+		results.add(resultInteger);
 		this.sender().tell(new Profiler.PrefixCompletionMessage(results), this.self());
 	}
 
