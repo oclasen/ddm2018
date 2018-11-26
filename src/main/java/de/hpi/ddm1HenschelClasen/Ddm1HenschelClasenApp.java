@@ -55,10 +55,10 @@ public class Ddm1HenschelClasenApp {
     	public static final int DEFAULT_MASTER_PORT = 7876;
     	public static final int DEFAULT_SLAVE_PORT = 7879;
         public static final int DEFAULT_WORKERS = 4;
-        public static final int DEFAULT_SLAVES = 2;
+        public static final int DEFAULT_SLAVES = 4;
         public static final String DEFAULT_PATH = "students.csv";
     	
-    	@Parameter(names = {"-h", "--host"}, description = "this machine's host name or IP to bind against")
+    	@Parameter(names = {"-mh", "--masterhost"}, description = "this machine's host name or IP to bind against")
         String host = this.getDefaultHost();
 
         String getDefaultHost() {
@@ -104,7 +104,7 @@ public class Ddm1HenschelClasenApp {
         @Parameter(names = {"-mp", "--masterport"}, description = "port of the master", required = false)
         int masterport = DEFAULT_MASTER_PORT;
 
-        @Parameter(names = {"-mh", "--masterhost"}, description = "host name or IP of the master", required = true)
+        @Parameter(names = {"-h", "--host"}, description = "host name or IP of the master", required = true)
         String masterhost;
     }
 }

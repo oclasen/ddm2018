@@ -21,7 +21,7 @@ public class Ddm1HenschelClasenSystem {
 				"akka.remote.artery.canonical.hostname = \"" + host + "\"\n" +
 				"akka.remote.artery.canonical.port = " + port + "\n" +
 				"akka.cluster.roles = [" + actorSystemRole + "]\n" +
-				//"akka.cluster.min-nr-of-members = " + slaves + "\n" +
+				"akka.cluster.min-nr-of-members = " + slaves + "\n" +
 				"akka.cluster.seed-nodes = [\"akka://" + actorSystemName + "@" + masterhost + ":" + masterport + "\"]")
 			.withFallback(ConfigFactory.load("ddm1HenschelClasen"));
 	}
