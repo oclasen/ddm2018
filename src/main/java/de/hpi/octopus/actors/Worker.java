@@ -58,30 +58,40 @@ public class Worker extends AbstractActor {
 	@Data @AllArgsConstructor
 	public static class LinearCombinationWorkMessage extends WorkMessage {
 		private static final long serialVersionUID = -2492671797894687456L;
-
+		public LinearCombinationWorkMessage(){
+		}
 		private List<String> passwords;
 		private long begin;
 		private long range;
+
+
 
 	}
 
 	@Data @AllArgsConstructor
 	public static class GeneWorkMessage extends WorkMessage {
 		private static final long serialVersionUID = -1146589161762748486L;
+		public GeneWorkMessage(){
 
+		}
 		private int originalId;
 		private String originalGene;
 		private List<ArrayList<String>> potentialPartners;
+
 
 	}
 
 	@Data @AllArgsConstructor
 	public static class HashMiningWorkMessage extends WorkMessage {
 		private static final long serialVersionUID = -3498714556892986224L;
+		public HashMiningWorkMessage(){
 
+		}
 		private String id;
 		private int prefix;
 		private int partnerId;
+
+
 
 
 	}
@@ -193,7 +203,6 @@ public class Worker extends AbstractActor {
 		}
 		LinearCombination linearCombination = new LinearCombination();
 		int[] resultInt = linearCombination.solve(passwordInt, message.begin, message.range);
-		this.log.info("this is the result" + Arrays.toString(resultInt));
 		ArrayList<Integer> resultInteger = new ArrayList<>();
 		for (int i : resultInt) {
 			resultInteger.add(i);
@@ -204,7 +213,6 @@ public class Worker extends AbstractActor {
 	}
 
 	private void handle(HashMiningWorkMessage message) {
-		this.log.info(message.toString());
 		ArrayList<String> result = new ArrayList<>();
 		String begin;
 
@@ -222,7 +230,6 @@ public class Worker extends AbstractActor {
 			nonce = rand.nextInt();
 			String hash = Passwordcracker.hash(Integer.toString(message.partnerId) + nonce);
 			if (hash.startsWith(begin)){
-				this.log.info(hash);
 				result.add(message.id);
 				result.add(hash);
 				break;
