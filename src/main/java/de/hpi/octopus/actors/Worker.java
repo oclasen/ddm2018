@@ -17,6 +17,7 @@ import de.hpi.octopus.OctopusMaster;
 import de.hpi.octopus.actors.Profiler.PasswordCompletionMessage;
 import de.hpi.octopus.actors.Profiler.RegistrationMessage;
 import de.hpi.octopus.utils.GeneComparison;
+import de.hpi.octopus.utils.LinearCombination;
 import de.hpi.octopus.utils.Passwordcracker;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -159,4 +160,13 @@ public class Worker extends AbstractActor {
 		}
 		this.sender().tell(new Profiler.GeneCompletionMessage(message.originalId, partnerId, length), this.self());
 	}
+
+	private void handle(LinearCombinationWorkMessage message) {
+
+	}
+
+	private void handle(HashMiningWorkMessage message) {
+
+	}
+
 }
