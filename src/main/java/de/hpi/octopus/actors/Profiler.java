@@ -25,6 +25,11 @@ public class Profiler extends AbstractActor {
         return Props.create(Profiler.class);
     }
 
+    @Override
+    public void preStart() {
+        Reaper.watchWithDefaultReaper(this);
+    }
+
     ////////////////////
     // Actor Messages //
     ////////////////////
@@ -196,6 +201,7 @@ public class Profiler extends AbstractActor {
         this.assign(this.sender());
         if (unassignedWork.isEmpty() && busyWorkers.isEmpty()){
             this.log.info("password cracking completed");
+
             createPrefixWork();
         }
     }
