@@ -1,4 +1,4 @@
-package de.hpi.octopus.utils;
+package de.hpi.ddm1HenschelClasen.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;

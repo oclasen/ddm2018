@@ -1,4 +1,4 @@
-package de.hpi.octopus.actors;
+package de.hpi.ddm1HenschelClasen.actors;
 
 import java.io.Serializable;
 import java.util.*;
@@ -13,12 +13,12 @@ import akka.cluster.Member;
 import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import de.hpi.octopus.OctopusMaster;
-import de.hpi.octopus.actors.Profiler.PasswordCompletionMessage;
-import de.hpi.octopus.actors.Profiler.RegistrationMessage;
-import de.hpi.octopus.utils.GeneComparison;
-import de.hpi.octopus.utils.LinearCombination;
-import de.hpi.octopus.utils.Passwordcracker;
+import de.hpi.ddm1HenschelClasen.Ddm1HenschelClasenMaster;
+import de.hpi.ddm1HenschelClasen.actors.Profiler.PasswordCompletionMessage;
+import de.hpi.ddm1HenschelClasen.actors.Profiler.RegistrationMessage;
+import de.hpi.ddm1HenschelClasen.utils.GeneComparison;
+import de.hpi.ddm1HenschelClasen.utils.LinearCombination;
+import de.hpi.ddm1HenschelClasen.utils.Passwordcracker;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -156,13 +156,14 @@ public class Worker extends AbstractActor {
 	}
 
 	private void register(Member member) {
-		if (member.hasRole(OctopusMaster.MASTER_ROLE))
+		if (member.hasRole(Ddm1HenschelClasenMaster.MASTER_ROLE))
 			this.getContext()
 				.actorSelection(member.address() + "/user/" + Profiler.DEFAULT_NAME)
 				.tell(new RegistrationMessage(), this.self());
 	}
 	
 	private void handle(PasswordWorkMessage message) {
+		this.log.info("received passwordWork");
 		ArrayList<List<String>> crackedVictims = new ArrayList<>();
 		for(List<String> victim : message.victims) {
 			String crackedPassword = Passwordcracker.crack(victim.get(1));
@@ -175,6 +176,7 @@ public class Worker extends AbstractActor {
 	}
 
 	private void handle(GeneWorkMessage message) {
+		this.log.info("received geneWork");
 		int partnerId = -1;
 		int length = 0;
 		for(ArrayList<String> entry : message.potentialPartners) {
@@ -191,6 +193,7 @@ public class Worker extends AbstractActor {
 	}
 
 	private void handle(LinearCombinationWorkMessage message) {
+		this.log.info("received prefixWork");
 		ArrayList<Integer> passwordInt = new ArrayList<>();
 		for (String password : message.passwords) {
 			int tmp = 0;
@@ -215,6 +218,7 @@ public class Worker extends AbstractActor {
 	}
 
 	private void handle(HashMiningWorkMessage message) {
+		this.log.info("received hashWork");
 		ArrayList<String> result = new ArrayList<>();
 		String begin;
 

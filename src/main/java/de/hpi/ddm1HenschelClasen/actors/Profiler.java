@@ -1,15 +1,12 @@
-package de.hpi.octopus.actors;
+package de.hpi.ddm1HenschelClasen.actors;
 
 import java.io.Serializable;
-import java.math.BigInteger;
-import java.math.BigDecimal;
 import java.util.*;
 
 import akka.actor.*;
-import akka.cluster.Cluster;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import de.hpi.octopus.actors.Worker.WorkMessage;
+import de.hpi.ddm1HenschelClasen.actors.Worker.WorkMessage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -207,7 +204,7 @@ public class Profiler extends AbstractActor {
     }
 
     private void handle(PrefixCompletionMessage message){
-        this.log.info(message.toString());
+        this.log.info("received PrefixSolution");
         ArrayList<ArrayList<Integer>> combinations = message.combinations;
         if (prefixDone){
             busyWorkers.remove(this.sender());
@@ -234,7 +231,7 @@ public class Profiler extends AbstractActor {
     }
 
     private void handle(GeneCompletionMessage message) {
-        this.log.info(message.toString());
+        this.log.info("received temp GeneSolution");
         int originId = message.originId;
         int partnerId = message.partnerId;
         int length = message.length;
@@ -256,7 +253,7 @@ public class Profiler extends AbstractActor {
     }
 
     private void handle(HashCompletionMessage message) {
-        this.log.info(message.toString());
+        this.log.info("received hash solution");
         hashValues.add(message.hash);
         this.assign(this.sender());
         if (hashValues.size()==students.size()){
@@ -267,7 +264,7 @@ public class Profiler extends AbstractActor {
             for (int j = 0; j < students.size(); j++){
                 this.log.info(students.get(j).toString());
             }
-            long duration = System.currentTimeMillis() - startTime;
+            long duration = (System.currentTimeMillis() - startTime)/1000;
             this.log.info("finished tasks in " + duration + " Milliseconds");
             while (!idleWorkers.isEmpty()) {
                 ActorRef w = idleWorkers.poll();
@@ -277,7 +274,7 @@ public class Profiler extends AbstractActor {
     }
 
     private void createPrefixWork(){
-        this.log.info("creating prefixWork");
+        this.log.info("start generating prefixWork");
         List<String> passwords = new ArrayList<String>();
         for (int j = 0; j < students.size(); j++){
             passwords.add(students.get(j).get(2));
@@ -288,7 +285,7 @@ public class Profiler extends AbstractActor {
             long range = (long) Math.floor(steps/5000);
             unassignedWork.add(new Worker.LinearCombinationWorkMessage(passwords, begin, range));
         }
-        this.log.info("prefixWork created");
+        this.log.info("finished generating prefixWork");
         this.assignAll();
     }
 
@@ -307,7 +304,7 @@ public class Profiler extends AbstractActor {
                 unassignedWork.add(new Worker.GeneWorkMessage(i+1, students.get(i).get(3), potentialPartners));
             }
         }
-        this.log.info("geneWork created");
+        this.log.info("finished generating geneWork");
         for (int j = 0; j < students.size(); j++){
             students.get(j).remove(3);
         }
@@ -322,7 +319,7 @@ public class Profiler extends AbstractActor {
             int partner = Integer.parseInt(students.get(j).get(4));
             unassignedWork.add(new Worker.HashMiningWorkMessage(id,prefix,partner));
         }
-        this.log.info("HashWork created");
+        this.log.info("finished generating hashWork");
         this.assignAll();
     }
 
@@ -364,7 +361,5 @@ public class Profiler extends AbstractActor {
         }
         this.busyWorkers.put(worker, work);
         worker.tell(work, this.self());
-        this.log.info(Integer.toString(busyWorkers.size()));
-        this.log.info(Integer.toString(idleWorkers.size()));
     }
 }

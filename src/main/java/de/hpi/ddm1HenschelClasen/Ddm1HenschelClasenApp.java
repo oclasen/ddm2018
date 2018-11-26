@@ -1,4 +1,4 @@
-package de.hpi.octopus;
+package de.hpi.ddm1HenschelClasen;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -7,19 +7,18 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
-import de.hpi.octopus.OctopusMaster;
 
-public class OctopusApp {
+public class Ddm1HenschelClasenApp {
 
-	public static final String ACTOR_SYSTEM_NAME = "octopus";
+	public static final String ACTOR_SYSTEM_NAME = "ddm1HenschelClasen";
 	
 	public static void main(String[] args) {
 
     	MasterCommand masterCommand = new MasterCommand();
         SlaveCommand slaveCommand = new SlaveCommand();
         JCommander jCommander = JCommander.newBuilder()
-        	.addCommand(OctopusMaster.MASTER_ROLE, masterCommand)
-            .addCommand(OctopusSlave.SLAVE_ROLE, slaveCommand)
+        	.addCommand(Ddm1HenschelClasenMaster.MASTER_ROLE, masterCommand)
+            .addCommand(Ddm1HenschelClasenSlave.SLAVE_ROLE, slaveCommand)
             .build();
 
         try {
@@ -30,11 +29,11 @@ public class OctopusApp {
             }
 
             switch (jCommander.getParsedCommand()) {
-                case OctopusMaster.MASTER_ROLE:
-                    OctopusMaster.start(ACTOR_SYSTEM_NAME, masterCommand.workers, masterCommand.slaves, masterCommand.host, masterCommand.port, masterCommand.path);
+                case Ddm1HenschelClasenMaster.MASTER_ROLE:
+                    Ddm1HenschelClasenMaster.start(ACTOR_SYSTEM_NAME, masterCommand.workers, masterCommand.slaves, masterCommand.host, masterCommand.port, masterCommand.path);
                     break;
-                case OctopusSlave.SLAVE_ROLE:
-                    OctopusSlave.start(ACTOR_SYSTEM_NAME, slaveCommand.workers, slaveCommand.host, slaveCommand.port, slaveCommand.masterhost, slaveCommand.masterport);
+                case Ddm1HenschelClasenSlave.SLAVE_ROLE:
+                    Ddm1HenschelClasenSlave.start(ACTOR_SYSTEM_NAME, slaveCommand.workers, slaveCommand.host, slaveCommand.port, slaveCommand.masterhost, slaveCommand.masterport);
                     break;
                 default:
                     throw new AssertionError();

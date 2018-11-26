@@ -10,7 +10,7 @@ To make sure that your project is set up correctly in an IDE, you can run the te
 
 ## Execution instructions
 
-Just run the main class `de.hpi.akka_tutorial.Main` or `de.hpi.octopus.OctopusApp`, respectively, from within your IDE or from the command line. The app will then print an overview of the different possible parameters. Append parameters of your choice to the run configuration in your IDE or to your command line call, as exemplified below:
+Just run the main class `de.hpi.akka_tutorial.Main` or `de.hpi.ddm1HenschelClasen.Ddm1HenschelClasenApp`, respectively, from within your IDE or from the command line. The app will then print an overview of the different possible parameters. Append parameters of your choice to the run configuration in your IDE or to your command line call, as exemplified below:
 * Parameters to start a master with two local workers: `master --workers 2`
 * Parameters to start a slave that tries to connect to a remote master: `slave --master <master host>:<master port>`
 

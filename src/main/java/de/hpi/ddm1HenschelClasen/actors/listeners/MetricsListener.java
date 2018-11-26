@@ -1,11 +1,9 @@
-package de.hpi.octopus.actors.listeners;
+package de.hpi.ddm1HenschelClasen.actors.listeners;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
 import akka.cluster.Cluster;
-import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.CurrentClusterState;
-import akka.cluster.Member;
 import akka.cluster.metrics.ClusterMetricsChanged;
 import akka.cluster.metrics.NodeMetrics;
 import akka.cluster.metrics.StandardMetrics;
@@ -14,7 +12,7 @@ import akka.cluster.metrics.StandardMetrics.Cpu;
 import akka.cluster.metrics.ClusterMetricsExtension;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import de.hpi.octopus.actors.Reaper;
+import de.hpi.ddm1HenschelClasen.actors.Reaper;
 
 public class MetricsListener extends AbstractActor {
 

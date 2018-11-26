@@ -1,4 +1,4 @@
-package de.hpi.octopus.actors;
+package de.hpi.ddm1HenschelClasen.actors;
 
 import akka.actor.*;
 

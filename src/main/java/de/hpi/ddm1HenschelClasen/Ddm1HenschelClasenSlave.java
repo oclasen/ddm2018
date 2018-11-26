@@ -1,14 +1,14 @@
-package de.hpi.octopus;
+package de.hpi.ddm1HenschelClasen;
 
 import com.typesafe.config.Config;
 
 import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
-import de.hpi.octopus.actors.Reaper;
-import de.hpi.octopus.actors.Worker;
-import de.hpi.octopus.actors.listeners.MetricsListener;
+import de.hpi.ddm1HenschelClasen.actors.Reaper;
+import de.hpi.ddm1HenschelClasen.actors.Worker;
+import de.hpi.ddm1HenschelClasen.actors.listeners.MetricsListener;
 
-public class OctopusSlave extends OctopusSystem {
+public class Ddm1HenschelClasenSlave extends Ddm1HenschelClasenSystem {
 
 	public static final String SLAVE_ROLE = "slave";
 	

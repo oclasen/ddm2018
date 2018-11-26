@@ -1,24 +1,22 @@
-package de.hpi.octopus;
+package de.hpi.ddm1HenschelClasen;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 
 import com.typesafe.config.Config;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
-import de.hpi.octopus.actors.Profiler;
-import de.hpi.octopus.actors.Reaper;
-import de.hpi.octopus.actors.Worker;
-import de.hpi.octopus.actors.listeners.ClusterListener;
+import de.hpi.ddm1HenschelClasen.actors.Profiler;
+import de.hpi.ddm1HenschelClasen.actors.Reaper;
+import de.hpi.ddm1HenschelClasen.actors.Worker;
+import de.hpi.ddm1HenschelClasen.actors.listeners.ClusterListener;
 
-public class OctopusMaster extends OctopusSystem {
+public class Ddm1HenschelClasenMaster extends Ddm1HenschelClasenSystem {
 
 	public static final String MASTER_ROLE = "master";
 
