@@ -66,7 +66,7 @@ public class Worker extends AbstractActor {
 	public static class GeneWorkMessage extends WorkMessage {
 		private static final long serialVersionUID = -1146589161762748486L;
 
-		private long originalId;
+		private int originalId;
 		private String originalGene;
 		private List<ArrayList<String>> potentialPartners;
 
