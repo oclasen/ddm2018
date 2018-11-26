@@ -1,7 +1,6 @@
 package de.hpi.octopus.actors;
 
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.*;
 
 import akka.actor.AbstractActor;
@@ -80,7 +79,10 @@ public class Worker extends AbstractActor {
 	public static class HashMiningWorkMessage extends WorkMessage {
 		private static final long serialVersionUID = -3498714556892986224L;
 
-		private ArrayList<ArrayList<Integer>> prefixAndIds;
+		private String id;
+		private int prefix;
+		private int partnerId;
+
 
 	}
 
@@ -191,7 +193,6 @@ public class Worker extends AbstractActor {
 			}
 			passwordInt.add(tmp);
 		}
-		this.log.info("message received");
 		LinearCombination linearCombination = new LinearCombination();
 		int[] resultInt = linearCombination.solve(passwordInt, message.begin, message.range);
 		this.log.info("this is the result" + Arrays.toString(resultInt));
@@ -205,29 +206,32 @@ public class Worker extends AbstractActor {
 	}
 
 	private void handle(HashMiningWorkMessage message) {
-
-		ArrayList<ArrayList<String>> results = new ArrayList<>();
+		this.log.info(message.toString());
+		ArrayList<String> result = new ArrayList<>();
 		String begin;
 
-		for (ArrayList<Integer> entry : message.prefixAndIds) {
-			if (entry.get(1) == 1) {
-				begin = "11111";
-			} else {
-				begin = "00000";
-			}
+		if (message.prefix == 1) {
+			begin = "11111";
+		} else {
+			begin = "00000";
+		}
 
-			for (int j = 0; j < Integer.MAX_VALUE; j++) {
-				String hash = Passwordcracker.hash( entry.get(2) + "" + j);
-				if (hash.startsWith(begin)) {
-					ArrayList<String> result = new ArrayList<>();
-					result.add(String.valueOf(entry.get(0)));
-					result.add(hash);
-					results.add(result);
-				}
+		Random rand = new Random(13);
+
+		int nonce = 0;
+
+		while (true) {
+			nonce = rand.nextInt();
+			String hash = Passwordcracker.hash(Integer.toString(message.partnerId) + nonce);
+			if (hash.startsWith(begin)){
+				this.log.info(hash);
+				result.add(message.id);
+				result.add(hash);
+				break;
 			}
 		}
 
-		this.sender().tell(new Profiler.HashCompletionMessage(results), this.self());
+		this.sender().tell(new Profiler.HashCompletionMessage(result), this.self());
 	}
 
 	private void handle(ShutdownMessage message) {
