@@ -264,7 +264,7 @@ public class Profiler extends AbstractActor {
             for (int j = 0; j < students.size(); j++){
                 this.log.info(students.get(j).toString());
             }
-            long duration = (System.currentTimeMillis() - startTime)/1000;
+            long duration = System.currentTimeMillis() - startTime;
             this.log.info("finished tasks in " + duration + " Milliseconds");
             while (!idleWorkers.isEmpty()) {
                 ActorRef w = idleWorkers.poll();
