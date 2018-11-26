@@ -57,7 +57,7 @@ public class Worker extends AbstractActor {
 		private static final long serialVersionUID = -2492671797894687456L;
 
 		private List<String> passwords;
-		private BigInteger signsBegin;
+		private long begin;
 		private long range;
 
 	}
@@ -175,9 +175,8 @@ public class Worker extends AbstractActor {
 			passwordInt.add(tmp);
 		}
 
-		this.log.info(passwordInt.toString());
 		LinearCombination linearCombination = new LinearCombination();
-		ArrayList<ArrayList<Integer>> results = linearCombination.solve(message.passwords, message.begin, message.range);
+		ArrayList<ArrayList<Integer>> results = linearCombination.solve(passwordInt, message.begin, message.range);
 		this.sender().tell(new Profiler.PrefixCompletionMessage(results), this.self());
 	}
 
