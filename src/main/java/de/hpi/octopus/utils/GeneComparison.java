@@ -2,7 +2,7 @@ package de.hpi.octopus.utils;
 
 public class GeneComparison {
 
-    static int findLongestSubstring(String gene1, String gene2) {
+    public static int findLongestSubstring(String gene1, String gene2) {
         int m = gene1.length();
         int n = gene2.length();
 

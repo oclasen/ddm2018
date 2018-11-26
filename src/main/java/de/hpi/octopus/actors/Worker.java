@@ -16,6 +16,7 @@ import akka.event.LoggingAdapter;
 import de.hpi.octopus.OctopusMaster;
 import de.hpi.octopus.actors.Profiler.PasswordCompletionMessage;
 import de.hpi.octopus.actors.Profiler.RegistrationMessage;
+import de.hpi.octopus.utils.GeneComparison;
 import de.hpi.octopus.utils.Passwordcracker;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -108,8 +109,10 @@ public class Worker extends AbstractActor {
 		return receiveBuilder()
 				.match(CurrentClusterState.class, this::handle)
 				.match(MemberUp.class, this::handle)
-				.match(WorkMessage.class, this::handle)
 				.match(PasswordWorkMessage.class, this::handle)
+				.match(GeneWorkMessage.class, this:: handle)
+				.match(LinearCombinationWorkMessage.class, this::handle)
+				.match(HashMiningWorkMessage.class, this::handle)
 				.matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
 				.build();
 	}
@@ -131,12 +134,8 @@ public class Worker extends AbstractActor {
 				.actorSelection(member.address() + "/user/" + Profiler.DEFAULT_NAME)
 				.tell(new RegistrationMessage(), this.self());
 	}
-
-	private void handle(WorkMessage message) {
-	}
 	
 	private void handle(PasswordWorkMessage message) {
-		this.log.info(message.toString());
 		ArrayList<List<String>> crackedVictims = new ArrayList<>();
 		for(List<String> victim : message.victims) {
 			String crackedPassword = Passwordcracker.crack(victim.get(1));
@@ -146,6 +145,18 @@ public class Worker extends AbstractActor {
 			crackedVictims.add(crackedVictim);
 		}
 		this.sender().tell(new PasswordCompletionMessage(crackedVictims), this.self());
+	}
 
+	private void handle(GeneWorkMessage message) {
+		int partnerId = -1;
+		int length = 0;
+		for(ArrayList<String> entry : message.potentialPartners) {
+			int potlength = GeneComparison.findLongestSubstring(message.originalGene, entry.get(1));
+			if (potlength > length) {
+				length = potlength;
+				partnerId = Integer.valueOf(entry.get(0));
+			}
+		}
+		this.sender().tell(new Profiler.GeneCompletionMessage(message.originalId, partnerId, length), this.self());
 	}
 }
