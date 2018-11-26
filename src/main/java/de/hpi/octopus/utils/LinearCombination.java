@@ -1,43 +1,44 @@
 package de.hpi.octopus.utils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class LinearCombination {
 
-    public ArrayList<ArrayList<Integer>> solve(ArrayList<Integer> numbers, long begin, long range) {
-        ArrayList<ArrayList<Integer>> results = new ArrayList<>();
+    public int[] solve(ArrayList<Integer> input, long begin, long range) {
 
-        for (long a = begin; a < range; a++) {
-            String binary = Long.toBinaryString(a);
-            binary = String.format("%1$" + numbers.size() + "s", binary)
-                        .replace(' ', '0');
+        int[] numbers = new int[input.size()];
+        for (int i = 0; i < input.size(); i++) {
+            numbers[i] = input.get(i);
+        }
 
-            System.out.println(binary);
-            Integer[] prefixes = new Integer[numbers.size()];
+        for (long a = 0; a < range; a++) {
+            String binary = Long.toBinaryString(begin);
+
+            int[] prefixes = new int[numbers.length];
             for (int i = 0; i < prefixes.length; i++)
                 prefixes[i] = 1;
 
-            int i = 0;
-            for (int j = 0; j < binary.length(); j++) {
+            int i = prefixes.length-1;
+            for (int j = binary.length()-1; j >= 0; j--) {
                 if (binary.charAt(j) == '1')
                     prefixes[i] = -1;
-                i++;
+                i--;
             }
 
             if (this.sum(numbers, prefixes) == 0) {
-                System.out.println("this one");
-                results.add(new ArrayList<>(Arrays.asList(prefixes)));
+                return prefixes;
             }
-        }
-        return results;
 
+            begin++;
+        }
+
+        return new int[0];
     }
 
-    private int sum(ArrayList<Integer> numbers, Integer[] prefixes) {
+    private int sum(int[] numbers, int[] prefixes) {
         int sum = 0;
-        for (int i = 0; i < numbers.size(); i++)
-            sum += numbers.get(i) * prefixes[i];
+        for (int i = 0; i < numbers.length; i++)
+            sum += numbers[i] * prefixes[i];
         return sum;
     }
 
