@@ -6,11 +6,11 @@ import java.util.Arrays;
 
 public class LinearCombination {
 
-    private int[] passwords;
+    private ArrayList<Integer> passwords;
     private long range;
     private BigInteger bigIntSigns;
 
-    public LinearCombination(int[] passwords, BigInteger bigIntSigns, long range) {
+    public LinearCombination(ArrayList<Integer> passwords, BigInteger bigIntSigns, long range) {
         this.passwords = passwords;
         this.bigIntSigns = bigIntSigns;
         this.range = range;
@@ -23,13 +23,13 @@ public class LinearCombination {
         ArrayList<String> resultsString = new ArrayList<>();
         for(long i = 0; i<= range; i++) {
             signs = bigIntSigns.toString(2);
-            char[] leading = new char[passwords.length - signs.length()];
+            char[] leading = new char[passwords.size() - signs.length()];
             Arrays.fill(leading, '0');
             signs = new String(leading) + signs;
 
             long linearResult = 0;
-            for(int j = 0; j<passwords.length; j++) {
-                linearResult += (long) Math.pow(-1, (int) signs.charAt(j)) * passwords[j];
+            for(int j = 0; j<passwords.size(); j++) {
+                linearResult += (long) Math.pow(-1, (int) signs.charAt(j)) * passwords.get(j);
             }
             if(linearResult == 0) {
                 resultsString.add(signs);

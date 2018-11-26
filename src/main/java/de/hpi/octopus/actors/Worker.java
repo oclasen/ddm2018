@@ -162,7 +162,20 @@ public class Worker extends AbstractActor {
 	}
 
 	private void handle(LinearCombinationWorkMessage message) {
-
+		ArrayList<Integer> passwordInt = new ArrayList<>();
+		for (String password : message.passwords) {
+			int tmp = 0;
+			try {
+				tmp = Integer.valueOf(password);
+			} catch (NumberFormatException ex) {
+				this.log.error(password + " is not a Number (for LinearCombination)");
+				this.log.error(ex.getMessage());
+				return;
+			}
+			passwordInt.add(tmp);
+		}
+		LinearCombination linearCombination = new LinearCombination(passwordInt, message.signsBegin, message.range);
+		this.sender().tell(new PrefixCompletionMessage(linearCombination.calc()), this.self());
 	}
 
 	private void handle(HashMiningWorkMessage message) {
