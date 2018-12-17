@@ -43,6 +43,9 @@ object SimpleSpark extends App {
 					.master("local[" + config.workers + "]")
 				val spark = sparkBuilder.getOrCreate()
 
+				spark.conf.set("spark.sql.shuffle.partitions", "8") //
+				import spark.implicits._
+
 				time {
 					Sindy.discoverINDs(inputs, spark)
 				}
