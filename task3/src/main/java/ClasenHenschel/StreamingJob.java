@@ -26,7 +26,6 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.CsvReader;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple5;
-import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.util.Collector;
@@ -42,8 +41,11 @@ public class StreamingJob {
     
     public static void main(String[] args) throws Exception {
         
-        String path = "access_log_Aug95";
+        String path = "NASA_access_log_Jul95.gz";
         String cores = "4";
+        
+        //since the jar does not work, we mocked the input
+        String[] mockedArgs = {"--path", path, "--cores", cores};
         
         String client_path = "ClasenHenschelMaxClient";
         String request_path = "ClasenHenschelMaxRequest";
@@ -75,21 +77,33 @@ public class StreamingJob {
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd;
-
-//        try {
-//            cmd = parser.parse(options, args);
-//            path = cmd.getOptionValue("input");
-//            cores = cmd.getOptionValue("cores");
-//        } catch (ParseException e) {
-//            System.out.println(e.getMessage());
-//            formatter.printHelp("utility-name", options);
-//
-//            System.exit(1);
-//        }
+        
+        //parsing the mocked input
+        try {
+            cmd = parser.parse(options, mockedArgs);
+            if (cmd.hasOption("path")) {
+                String newPath = cmd.getOptionValue("path");
+                File testFile = new File(newPath);
+                if (testFile.exists()) {
+                    path = newPath;
+                }
+            }
+            
+            if (cmd.hasOption("cores")) {
+                String newCores = cmd.getOptionValue("cores");
+                cores = newCores;
+            }
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+            formatter.printHelp("utility-name", options);
+            
+            System.exit(1);
+        }
+        
+        System.out.println("Starting analyse of log: " + path + "\n");
         
         // set up the streaming execution environment
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
         
         DataStream<String> augLog = env.readTextFile(path);
         
@@ -137,7 +151,7 @@ public class StreamingJob {
                 collector.collect(new Tuple5<>(client, dateString, request, responseCode, byteNumber));
             }
         });
-        
+        System.out.println("Analysing clients...");
         orderedAugLog.flatMap(new FlatMapFunction<Tuple5<String, String, String, Integer, Integer>, Tuple2<String, Integer>>() {
             @Override
             public void flatMap(Tuple5<String, String, String, Integer, Integer> object, Collector<Tuple2<String, Integer>> collector) throws Exception {
@@ -145,6 +159,7 @@ public class StreamingJob {
             }
         }).keyBy(0).sum(1).writeAsCsv(client_path).setParallelism(1);
         
+        System.out.println("Analysing requests...");
         orderedAugLog.flatMap(new FlatMapFunction<Tuple5<String, String, String, Integer, Integer>, Tuple2<String, Integer>>() {
             @Override
             public void flatMap(Tuple5<String, String, String, Integer, Integer> object, Collector<Tuple2<String, Integer>> collector) throws Exception {
@@ -152,6 +167,7 @@ public class StreamingJob {
             }
         }).keyBy(0).sum(1).writeAsCsv(request_path, NO_OVERWRITE, "\n", "|||").setParallelism(1);
         
+        System.out.println("Analysing resource sizes...\n");
         orderedAugLog.flatMap(new FlatMapFunction<Tuple5<String, String, String, Integer, Integer>, Tuple2<String, Integer>>() {
             @Override
             public void flatMap(Tuple5<String, String, String, Integer, Integer> object, Collector<Tuple2<String, Integer>> collector) throws Exception {
