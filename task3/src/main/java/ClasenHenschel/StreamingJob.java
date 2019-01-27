@@ -41,56 +41,56 @@ import static org.apache.flink.core.fs.FileSystem.WriteMode.NO_OVERWRITE;
 public class StreamingJob {
     
     public static void main(String[] args) throws Exception {
-	
-	    String path = "access_log_Aug95";
-	    String cores = "4";
-	    
-	    String client_path = "ClasenHenschelMaxClient";
-	    String request_path = "ClasenHenschelMaxRequest";
-	    String resource_path = "ClasenHenschelLargestResource";
-	
-	    File clientFile = new File(client_path);
-	    if (clientFile.exists()){
-		    clientFile.delete();
-	    }
-	    File requestFile = new File(request_path);
-	    if (requestFile.exists()){
-		    requestFile.delete();
-	    }
-	    File resourceFile = new File(resource_path);
-	    if (resourceFile.exists()){
-		    resourceFile.delete();
-	    }
-	
-	    Options options = new Options();
-	
-	    Option filePath = new Option("p", "path", true, "input file path");
-	    filePath.setRequired(true);
-	    options.addOption(filePath);
-	
-	    Option coresOption = new Option("c", "cores", true, "number of cores");
-	    coresOption.setRequired(true);
-	    options.addOption(coresOption);
-	
-	    CommandLineParser parser = new DefaultParser();
-	    HelpFormatter formatter = new HelpFormatter();
-	    CommandLine cmd;
-	
-	    try {
-		    cmd = parser.parse(options, args);
-		    path = cmd.getOptionValue("input");
-		    cores = cmd.getOptionValue("cores");
-	    } catch (ParseException e) {
-		    System.out.println(e.getMessage());
-		    formatter.printHelp("utility-name", options);
-		
-		    System.exit(1);
-	    }
+        
+        String path = "access_log_Aug95";
+        String cores = "4";
+        
+        String client_path = "ClasenHenschelMaxClient";
+        String request_path = "ClasenHenschelMaxRequest";
+        String resource_path = "ClasenHenschelLargestResource";
+        
+        File clientFile = new File(client_path);
+        if (clientFile.exists()) {
+            clientFile.delete();
+        }
+        File requestFile = new File(request_path);
+        if (requestFile.exists()) {
+            requestFile.delete();
+        }
+        File resourceFile = new File(resource_path);
+        if (resourceFile.exists()) {
+            resourceFile.delete();
+        }
+        
+        Options options = new Options();
+        
+        Option filePath = new Option("p", "path", true, "input file path");
+        filePath.setRequired(false);
+        options.addOption(filePath);
+        
+        Option coresOption = new Option("c", "cores", true, "number of cores");
+        coresOption.setRequired(false);
+        options.addOption(coresOption);
+        
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+        CommandLine cmd;
+
+//        try {
+//            cmd = parser.parse(options, args);
+//            path = cmd.getOptionValue("input");
+//            cores = cmd.getOptionValue("cores");
+//        } catch (ParseException e) {
+//            System.out.println(e.getMessage());
+//            formatter.printHelp("utility-name", options);
+//
+//            System.exit(1);
+//        }
         
         // set up the streaming execution environment
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
-
+        
         DataStream<String> augLog = env.readTextFile(path);
         
         DataStream<Tuple5<String, String, String, Integer, Integer>> orderedAugLog = augLog.flatMap(new FlatMapFunction<String, Tuple5<String, String, String, Integer, Integer>>() {
@@ -137,80 +137,80 @@ public class StreamingJob {
                 collector.collect(new Tuple5<>(client, dateString, request, responseCode, byteNumber));
             }
         });
-
+        
         orderedAugLog.flatMap(new FlatMapFunction<Tuple5<String, String, String, Integer, Integer>, Tuple2<String, Integer>>() {
             @Override
             public void flatMap(Tuple5<String, String, String, Integer, Integer> object, Collector<Tuple2<String, Integer>> collector) throws Exception {
                 collector.collect(new Tuple2<>(object.f0, 1));
             }
         }).keyBy(0).sum(1).writeAsCsv(client_path).setParallelism(1);
-
+        
         orderedAugLog.flatMap(new FlatMapFunction<Tuple5<String, String, String, Integer, Integer>, Tuple2<String, Integer>>() {
             @Override
             public void flatMap(Tuple5<String, String, String, Integer, Integer> object, Collector<Tuple2<String, Integer>> collector) throws Exception {
                 collector.collect(new Tuple2<>(object.f2, 1));
             }
         }).keyBy(0).sum(1).writeAsCsv(request_path, NO_OVERWRITE, "\n", "|||").setParallelism(1);
-
+        
         orderedAugLog.flatMap(new FlatMapFunction<Tuple5<String, String, String, Integer, Integer>, Tuple2<String, Integer>>() {
             @Override
             public void flatMap(Tuple5<String, String, String, Integer, Integer> object, Collector<Tuple2<String, Integer>> collector) throws Exception {
                 collector.collect(new Tuple2<>(object.f2, object.f4));
             }
         }).keyBy(0).writeAsCsv(resource_path, NO_OVERWRITE, "\n", "|||").setParallelism(1);
-
+        
         // execute program
         env.execute();
-
-		ExecutionEnvironment clientEnv = ExecutionEnvironment.getExecutionEnvironment();
-		clientEnv.setParallelism(Integer.parseInt(cores));
-
-		DataSet<Tuple2<String, Integer>> clientSet = clientEnv.readCsvFile(client_path).types(String.class, Integer.class);
-
-		DataSet<Tuple2<String, Integer>> clientCounts =
-				clientSet.groupBy(0).maxBy(1).sortPartition(1, Order.DESCENDING).first(1);
-		ArrayList<Tuple2<String, Integer>> maxClient = (ArrayList<Tuple2<String, Integer>>) clientCounts.collect();
-		String maxClientString = maxClient.get(0).f0;
-		Integer maxClientCount = maxClient.get(0).f1;
-
-		ExecutionEnvironment requestEnv = ExecutionEnvironment.getExecutionEnvironment();
-		requestEnv.setParallelism(Integer.parseInt(cores));
-
+        
+        ExecutionEnvironment clientEnv = ExecutionEnvironment.getExecutionEnvironment();
+        clientEnv.setParallelism(Integer.parseInt(cores));
+        
+        DataSet<Tuple2<String, Integer>> clientSet = clientEnv.readCsvFile(client_path).types(String.class, Integer.class);
+        
+        DataSet<Tuple2<String, Integer>> clientCounts =
+                clientSet.groupBy(0).maxBy(1).sortPartition(1, Order.DESCENDING).first(1);
+        ArrayList<Tuple2<String, Integer>> maxClient = (ArrayList<Tuple2<String, Integer>>) clientCounts.collect();
+        String maxClientString = maxClient.get(0).f0;
+        Integer maxClientCount = maxClient.get(0).f1;
+        
+        ExecutionEnvironment requestEnv = ExecutionEnvironment.getExecutionEnvironment();
+        requestEnv.setParallelism(Integer.parseInt(cores));
+        
         CsvReader requestCSV = new CsvReader(request_path, requestEnv);
         requestCSV.fieldDelimiter("|||");
-
-		DataSet<Tuple2<String, Integer>> requestSet = requestCSV.types(String.class, Integer.class);
-
-		DataSet<Tuple2<String, Integer>> requestCounts =
-				requestSet.groupBy(0).maxBy(1).sortPartition(1, Order.DESCENDING).first(1);
-		ArrayList<Tuple2<String, Integer>> maxRequest = (ArrayList<Tuple2<String, Integer>>) requestCounts.collect();
-		String maxRequestString = maxRequest.get(0).f0;
-		Integer maxRequestCount = maxRequest.get(0).f1;
-
+        
+        DataSet<Tuple2<String, Integer>> requestSet = requestCSV.types(String.class, Integer.class);
+        
+        DataSet<Tuple2<String, Integer>> requestCounts =
+                requestSet.groupBy(0).maxBy(1).sortPartition(1, Order.DESCENDING).first(1);
+        ArrayList<Tuple2<String, Integer>> maxRequest = (ArrayList<Tuple2<String, Integer>>) requestCounts.collect();
+        String maxRequestString = maxRequest.get(0).f0;
+        Integer maxRequestCount = maxRequest.get(0).f1;
+        
         ExecutionEnvironment resourceEnv = ExecutionEnvironment.getExecutionEnvironment();
         resourceEnv.setParallelism(Integer.parseInt(cores));
-
+        
         CsvReader resourceCSV = new CsvReader(resource_path, resourceEnv);
         resourceCSV.fieldDelimiter("|||");
-
+        
         DataSet<Tuple2<String, Integer>> resourceSet = resourceCSV.types(String.class, Integer.class);
-
+        
         DataSet<Tuple2<String, Integer>> resourceSize =
                 resourceSet.maxBy(1).sortPartition(1, Order.DESCENDING).first(1);
         ArrayList<Tuple2<String, Integer>> largestResource = (ArrayList<Tuple2<String, Integer>>) resourceSize.collect();
         String largestResourceString = largestResource.get(0).f0;
         Integer largestResourceSize = largestResource.get(0).f1;
-
+        
         System.out.println("Client with most requests: " + maxClientString + "(" + maxClientCount + ")");
         System.out.println("Most often requested source: " + maxRequestString + "(" + maxRequestCount + ")");
-        System.out.println("Largest resource send" + largestResourceString + "(" + largestResourceSize + " Bytes)");
-
-
+        System.out.println("Largest resource send: " + largestResourceString + "(" + largestResourceSize + " Bytes)");
+        
+        
         //cleanup
         if (clientFile.delete())
-            System.out.println("client file cleaned");
+            System.out.println("\nclient file cleaned");
         else
-            System.out.println("client file error");
+            System.out.println("\nclient file error");
         if (requestFile.delete())
             System.out.println("request file cleaned");
         else
@@ -219,6 +219,6 @@ public class StreamingJob {
             System.out.println("resource file cleaned");
         else
             System.out.println("resource file error");
-
+        
     }
 }
