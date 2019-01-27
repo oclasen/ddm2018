@@ -18,36 +18,79 @@
 
 package ClasenHenschel;
 
+import org.apache.commons.cli.*;
 import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.common.operators.Order;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.io.CsvReader;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple5;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.util.Collector;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Skeleton for a Flink Streaming Job.
- *
- * <p>For a tutorial how to write a Flink streaming application, check the
- * tutorials and examples on the <a href="http://flink.apache.org/docs/stable/">Flink Website</a>.
- *
- * <p>To package your application into a JAR file for execution, run
- * 'mvn clean package' on the command line.
- *
- * <p>If you change the name of the main class (with the public static void main(String[] args))
- * method, change the respective entry in the POM.xml file (simply search for 'mainClass').
- */
+import static org.apache.flink.core.fs.FileSystem.WriteMode.NO_OVERWRITE;
+
 public class StreamingJob {
     
     public static void main(String[] args) throws Exception {
+	
+	    String path = "access_log_Aug95";
+	    String cores = "4";
+	    
+	    String client_path = "ClasenHenschelMaxClient";
+	    String request_path = "ClasenHenschelMaxRequest";
+	    String resource_path = "ClasenHenschelLargestResource";
+	
+	    File clientFile = new File(client_path);
+	    if (clientFile.exists()){
+		    clientFile.delete();
+	    }
+	    File requestFile = new File(request_path);
+	    if (requestFile.exists()){
+		    requestFile.delete();
+	    }
+	    File resourceFile = new File(resource_path);
+	    if (resourceFile.exists()){
+		    resourceFile.delete();
+	    }
+	
+	    Options options = new Options();
+	
+	    Option filePath = new Option("p", "path", true, "input file path");
+	    filePath.setRequired(true);
+	    options.addOption(filePath);
+	
+	    Option coresOption = new Option("c", "cores", true, "number of cores");
+	    coresOption.setRequired(true);
+	    options.addOption(coresOption);
+	
+	    CommandLineParser parser = new DefaultParser();
+	    HelpFormatter formatter = new HelpFormatter();
+	    CommandLine cmd;
+	
+	    try {
+		    cmd = parser.parse(options, args);
+		    path = cmd.getOptionValue("input");
+		    cores = cmd.getOptionValue("cores");
+	    } catch (ParseException e) {
+		    System.out.println(e.getMessage());
+		    formatter.printHelp("utility-name", options);
+		
+		    System.exit(1);
+	    }
+        
         // set up the streaming execution environment
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        
-        String path = "/Users/oliverclasen/Documents/access_log_Aug95.gz";
-        
+        env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
+
         DataStream<String> augLog = env.readTextFile(path);
         
         DataStream<Tuple5<String, String, String, Integer, Integer>> orderedAugLog = augLog.flatMap(new FlatMapFunction<String, Tuple5<String, String, String, Integer, Integer>>() {
@@ -59,61 +102,123 @@ public class StreamingJob {
                 Integer responseCode = 0;
                 Integer byteNumber = 0;
                 
-                Pattern clientPattern = Pattern.compile("[\\d]{1,3}([\\.][\\d]{1,3}){3}");
+                //TODO: Regex for the 5 columns
+                
+                Pattern clientPattern = Pattern.compile("[\\w]+[[\\.-][\\w]+]*");
                 Matcher clientMatcher = clientPattern.matcher(s);
                 if (clientMatcher.find()) {
                     client = clientMatcher.group();
                 }
                 
-                Pattern datePattern = Pattern.compile("[\\d]{1,3}([\\.][\\d]{1,3}){3}");
+                Pattern datePattern = Pattern.compile("\\[[\\w\\/: -]+\\]");
                 Matcher dateMatcher = datePattern.matcher(s);
                 if (dateMatcher.find()) {
                     dateString = dateMatcher.group();
                 }
                 
-                Pattern requestPattern = Pattern.compile("[\\d]{1,3}([\\.][\\d]{1,3}){3}");
+                Pattern requestPattern = Pattern.compile("\"[\\w\\.\\/,\\? -]+\"");
                 Matcher requestMatcher = requestPattern.matcher(s);
                 if (requestMatcher.find()) {
                     request = requestMatcher.group();
                 }
                 
-                Pattern responseCodePattern = Pattern.compile("[\\d]{1,3}([\\.][\\d]{1,3}){3}");
+                Pattern responseCodePattern = Pattern.compile("\\s([\\d]{1,4})\\s");
                 Matcher responseCodeMatcher = responseCodePattern.matcher(s);
                 if (responseCodeMatcher.find()) {
-                    responseCode = Integer.parseInt(responseCodeMatcher.group());
+                    responseCode = Integer.parseInt(responseCodeMatcher.group().replaceAll(" ", ""));
                 }
                 
-                Pattern byteNumberPattern = Pattern.compile("[\\d]{1,3}([\\.][\\d]{1,3}){3}");
+                Pattern byteNumberPattern = Pattern.compile("\\d+\\s(\\d+)");
                 Matcher byteNumberMatcher = byteNumberPattern.matcher(s);
                 if (byteNumberMatcher.find()) {
-                    byteNumber = Integer.parseInt(byteNumberMatcher.group());
+                    byteNumber = Integer.parseInt(byteNumberMatcher.group(1).replaceAll(" ", ""));
                 }
                 
                 collector.collect(new Tuple5<>(client, dateString, request, responseCode, byteNumber));
             }
         });
 
-		/*augLog.filter(line -> {
-			Pattern pattern = Pattern.compile("[\\d]{1,3}([\\.][\\d]{1,3}){3}");
-			Matcher matcher = pattern.matcher(line);
-			return matcher.find();})
-				.print();*/
-        
-        
-        DataStream<Tuple2<String, Integer>> client = augLog.flatMap(new FlatMapFunction<String, Tuple2<String, Integer>>() {
+        orderedAugLog.flatMap(new FlatMapFunction<Tuple5<String, String, String, Integer, Integer>, Tuple2<String, Integer>>() {
             @Override
-            public void flatMap(String s, Collector<Tuple2<String, Integer>> collector) throws Exception {
-                Pattern pattern = Pattern.compile("[\\d]{1,3}([\\.][\\d]{1,3}){3}");
-                Matcher matcher = pattern.matcher(s);
-                if (matcher.find())
-                    collector.collect(new Tuple2<>(matcher.group(), 1));
-                else
-                    collector.collect(new Tuple2<>("test", 1));
+            public void flatMap(Tuple5<String, String, String, Integer, Integer> object, Collector<Tuple2<String, Integer>> collector) throws Exception {
+                collector.collect(new Tuple2<>(object.f0, 1));
             }
-        }).keyBy(0).sum(1);
-        client.print();
-        
+        }).keyBy(0).sum(1).writeAsCsv(client_path).setParallelism(1);
+
+        orderedAugLog.flatMap(new FlatMapFunction<Tuple5<String, String, String, Integer, Integer>, Tuple2<String, Integer>>() {
+            @Override
+            public void flatMap(Tuple5<String, String, String, Integer, Integer> object, Collector<Tuple2<String, Integer>> collector) throws Exception {
+                collector.collect(new Tuple2<>(object.f2, 1));
+            }
+        }).keyBy(0).sum(1).writeAsCsv(request_path, NO_OVERWRITE, "\n", "|||").setParallelism(1);
+
+        orderedAugLog.flatMap(new FlatMapFunction<Tuple5<String, String, String, Integer, Integer>, Tuple2<String, Integer>>() {
+            @Override
+            public void flatMap(Tuple5<String, String, String, Integer, Integer> object, Collector<Tuple2<String, Integer>> collector) throws Exception {
+                collector.collect(new Tuple2<>(object.f2, object.f4));
+            }
+        }).keyBy(0).writeAsCsv(resource_path, NO_OVERWRITE, "\n", "|||").setParallelism(1);
+
         // execute program
-        env.execute("Flink Streaming Java API Skeleton");
+        env.execute();
+
+		ExecutionEnvironment clientEnv = ExecutionEnvironment.getExecutionEnvironment();
+		clientEnv.setParallelism(Integer.parseInt(cores));
+
+		DataSet<Tuple2<String, Integer>> clientSet = clientEnv.readCsvFile(client_path).types(String.class, Integer.class);
+
+		DataSet<Tuple2<String, Integer>> clientCounts =
+				clientSet.groupBy(0).maxBy(1).sortPartition(1, Order.DESCENDING).first(1);
+		ArrayList<Tuple2<String, Integer>> maxClient = (ArrayList<Tuple2<String, Integer>>) clientCounts.collect();
+		String maxClientString = maxClient.get(0).f0;
+		Integer maxClientCount = maxClient.get(0).f1;
+
+		ExecutionEnvironment requestEnv = ExecutionEnvironment.getExecutionEnvironment();
+		requestEnv.setParallelism(Integer.parseInt(cores));
+
+        CsvReader requestCSV = new CsvReader(request_path, requestEnv);
+        requestCSV.fieldDelimiter("|||");
+
+		DataSet<Tuple2<String, Integer>> requestSet = requestCSV.types(String.class, Integer.class);
+
+		DataSet<Tuple2<String, Integer>> requestCounts =
+				requestSet.groupBy(0).maxBy(1).sortPartition(1, Order.DESCENDING).first(1);
+		ArrayList<Tuple2<String, Integer>> maxRequest = (ArrayList<Tuple2<String, Integer>>) requestCounts.collect();
+		String maxRequestString = maxRequest.get(0).f0;
+		Integer maxRequestCount = maxRequest.get(0).f1;
+
+        ExecutionEnvironment resourceEnv = ExecutionEnvironment.getExecutionEnvironment();
+        resourceEnv.setParallelism(Integer.parseInt(cores));
+
+        CsvReader resourceCSV = new CsvReader(resource_path, resourceEnv);
+        resourceCSV.fieldDelimiter("|||");
+
+        DataSet<Tuple2<String, Integer>> resourceSet = resourceCSV.types(String.class, Integer.class);
+
+        DataSet<Tuple2<String, Integer>> resourceSize =
+                resourceSet.maxBy(1).sortPartition(1, Order.DESCENDING).first(1);
+        ArrayList<Tuple2<String, Integer>> largestResource = (ArrayList<Tuple2<String, Integer>>) resourceSize.collect();
+        String largestResourceString = largestResource.get(0).f0;
+        Integer largestResourceSize = largestResource.get(0).f1;
+
+        System.out.println("Client with most requests: " + maxClientString + "(" + maxClientCount + ")");
+        System.out.println("Most often requested source: " + maxRequestString + "(" + maxRequestCount + ")");
+        System.out.println("Largest resource send" + largestResourceString + "(" + largestResourceSize + " Bytes)");
+
+
+        //cleanup
+        if (clientFile.delete())
+            System.out.println("client file cleaned");
+        else
+            System.out.println("client file error");
+        if (requestFile.delete())
+            System.out.println("request file cleaned");
+        else
+            System.out.println("request file error");
+        if (resourceFile.delete())
+            System.out.println("resource file cleaned");
+        else
+            System.out.println("resource file error");
+
     }
 }
